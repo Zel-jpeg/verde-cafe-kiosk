@@ -148,7 +148,19 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 @media(max-width:850px){.mobile-bar .brand-art--wordmark{width:110px;height:55px}}
 @media(max-width:600px){.welcome-screen{padding:32px 18px}.welcome-brand .brand-art--wordmark{width:min(260px,72vw);height:auto}.welcome-choices{grid-template-columns:1fr}.welcome-choices button{min-height:104px}.stepper{gap:2px;margin-bottom:22px}.step{font-size:11px;gap:6px}.step>span{width:32px;height:32px;font-size:12px}.step small{font-size:10px;line-height:1.2;max-width:73px}.product-info p{font-size:11px;min-height:48px}.admin-login-page{padding:14px 17px 36px}.admin-login-top .brand-art--wordmark{width:120px;height:62px}.admin-login-panel{padding:26px 21px}}
 @media(max-width:380px){.product-info p{display:block}.step small{font-size:9px}}
-.progress-header{position:relative;min-height:70px}
-.progress-back{position:absolute;left:0;top:5px;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:0 13px;background:#fff;border:1px solid #cddac1;border-radius:10px;color:var(--forest);font-size:12px;font-weight:800}
+/* Share the sticky header clearance with the cart and category scroll target. */
+.kiosk-main{--progress-header-top:0px;--progress-header-height:83px;--progress-sticky-start:30px}
+.progress-header{position:sticky;top:var(--progress-header-top);z-index:20;display:flex;flex-direction:column;align-items:flex-start;min-height:var(--progress-header-height);padding:12px 0;margin-bottom:32px;background:transparent}
+.progress-header::before{content:'';position:absolute;inset:0 -8px;z-index:-1;pointer-events:none;border:1px solid #ffffff99;border-radius:14px;background:#fffaf0cc;backdrop-filter:blur(16px) saturate(130%);-webkit-backdrop-filter:blur(16px) saturate(130%);box-shadow:0 8px 24px #174b3514}
+/* Reveal the glass at the sticky edge; keep a readable fallback for older browsers. */
+@keyframes progress-glass{from{opacity:0}to{opacity:1}}
+@supports (animation-timeline:scroll()) and (animation-range:0px 1px){.progress-header::before{animation:progress-glass linear both;animation-timeline:scroll(root block);animation-range:var(--progress-sticky-start) calc(var(--progress-sticky-start) + 1px)}}
+@supports (container-type:scroll-state){.progress-header{container-type:scroll-state;container-name:progress-header}.progress-header::before{animation:none;opacity:0}@container progress-header scroll-state(stuck:top){.progress-header::before{opacity:1}}}
+.progress-header .stepper{margin-bottom:0}
+.kiosk-main .cart-panel{top:calc(var(--progress-header-top) + var(--progress-header-height) + 18px)}
+#menu-products{scroll-margin-top:calc(var(--progress-header-top) + var(--progress-header-height) + 18px)}
+.progress-back{position:absolute;left:0;top:17px;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:0 13px;background:#fff;border:1px solid #cddac1;border-radius:10px;color:var(--forest);font-size:12px;font-weight:800;flex:none;white-space:nowrap}
 .progress-back:hover:not(:disabled){background:#eef4e6;border-color:var(--leaf)}
-@media(max-width:1100px){.progress-header{min-height:0}.progress-back{position:static;margin-bottom:12px}}
+@media(max-width:1250px){.progress-header{flex-direction:row;align-items:center;gap:20px}.progress-back{position:static}.progress-header .stepper{flex:1;min-width:0;margin:0 auto}}
+@media(max-width:850px){.kiosk-main{--progress-header-top:69px}}
+@media(max-width:600px){.kiosk-main{--progress-sticky-start:20px}.progress-header{gap:8px;margin-bottom:22px}.progress-back{gap:5px;padding:0 8px;font-size:11px}.progress-back svg{width:16px;height:16px}.progress-header .step>span{width:28px;height:28px}.progress-header .step small{font-size:10px}}
