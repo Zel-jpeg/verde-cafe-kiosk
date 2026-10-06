@@ -1,4 +1,8 @@
-import type { Product, Receipt } from '../../shared/types'
+import type { FeedbackPage, Product, Receipt } from '../../shared/types'
+
+export class ApiError extends Error {
+  constructor(message: string, public status: number) { super(message); this.name = 'ApiError' }
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response
@@ -8,13 +12,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error('The API is unavailable. Start the full app with vercel dev and configure Supabase.')
   }
   const body = await response.json().catch(() => ({})) as { error?: string }
-  if (!response.ok) throw new Error(body.error || `Request failed (${response.status}).`)
+  if (!response.ok) throw new ApiError(body.error || `Request failed (${response.status}).`, response.status)
   return body as T
 }
 
 export const api = {
   products: () => request<{ products: Product[] }>('/api/products'),
   checkout: (body: unknown) => request<{ receipt: Receipt }>('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+  submitFeedback: (body: { checkoutKey: string; rating: number; comment: string }) => request<{ saved: true }>('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+  adminFeedback: (token: string, page = 0) => request<FeedbackPage>(`/api/admin/feedback?page=${page}`, { headers: { Authorization: `Bearer ${token}` } }),
   adminProducts: (token: string) => request<{ products: Product[] }>('/api/admin/products', { headers: { Authorization: `Bearer ${token}` } }),
   saveProduct: (token: string, product: unknown, id?: string) => request<{ product: Product }>('/api/admin/products', {
     method: id ? 'PATCH' : 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },

@@ -1,0 +1,12 @@
+Generated with the built-in image_gen tool.
+Asset: public/products/iced-matcha-latte.png
+
+Use case: product-mockup
+Asset type: square cafe menu product photograph for Verde Cafe
+Primary request: one appetizing iced matcha latte isolated on a pure white background, ready for a cafe product listing.
+Subject: a single elegant clear straight-sided glass filled with creamy pale green matcha latte, with a natural subtle gradient from milky cream at the bottom to richer matcha green at the top, realistic translucent ice cubes and light condensation.
+Style/medium: premium photorealistic studio food and beverage photography.
+Composition/framing: square image, the full glass centered with comfortable white margins on every side, photographed from a slightly elevated front three-quarter view; drink occupies about 70 percent of image height, suitable for thumbnail cropping.
+Scene/backdrop: seamless pure white background and white surface, only a small soft natural contact shadow below the glass.
+Lighting/mood: soft bright diffused studio lighting, crisp detail, natural fresh green color.
+Constraints: exactly one beverage; no text, branding, labels, watermark, hands, straws, utensils, additional ingredients, or decorative props; clean catalog composition.

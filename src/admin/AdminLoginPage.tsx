@@ -4,8 +4,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { BrandArtwork } from '../components/BrandArtwork'
 import { ActionDialog } from '../components/Feedback'
 import type { DialogState } from '../components/Feedback'
-import { api } from '../lib/api'
 import { authClient } from '../lib/supabaseAuth'
+import { useAdminAccess } from './useAdminAccess'
 
 export function AdminLoginPage() {
   const navigate = useNavigate()
@@ -13,16 +13,11 @@ export function AdminLoginPage() {
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [dialog, setDialog] = useState<DialogState | null>(null)
+  const { authorized, verify } = useAdminAccess()
 
   useEffect(() => {
-    let active = true
-    void authClient?.auth.getSession().then(async ({ data }) => {
-      if (!active || !data.session) return
-      try { await api.adminProducts(data.session.access_token); if (active) navigate('/admin', { replace: true }) }
-      catch { /* A session without a server-side admin role stays on the login page. */ }
-    })
-    return () => { active = false }
-  }, [navigate])
+    if (authorized && !busy && !dialog) navigate('/admin', { replace: true })
+  }, [authorized, busy, dialog, navigate])
 
   async function signIn(event: React.FormEvent) {
     event.preventDefault()
@@ -32,7 +27,7 @@ export function AdminLoginPage() {
       const { data, error } = await authClient.auth.signInWithPassword({ email, password })
       if (error) throw error
       if (!data.session) throw new Error('No session was returned. Please try again.')
-      await api.adminProducts(data.session.access_token)
+      await verify(data.session)
       setPassword('')
       setDialog({ kind: 'success', title: 'Welcome back', message: 'Your Verde Coffee menu is ready to manage.', primaryLabel: 'Manage products', onPrimary: () => { setDialog(null); navigate('/admin', { replace: true }) } })
     } catch (error) {

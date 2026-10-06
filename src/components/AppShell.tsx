@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { LogOut, Menu, X } from 'lucide-react'
+import { LayoutGrid, LogOut, Menu, Plus, X } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
 import { BrandArtwork } from './BrandArtwork'
 import { categoryIcon } from '../lib/productPresentation'
@@ -10,9 +10,10 @@ type Props = {
   activeCategory?: string
   onCategory?: (category: string) => void
   onSignOut?: () => void
+  onAdminNavigate?: (path: string) => void
 }
 
-export function AppShell({ children, categories, activeCategory, onCategory, onSignOut }: Props) {
+export function AppShell({ children, categories, activeCategory, onCategory, onSignOut, onAdminNavigate }: Props) {
   const [open, setOpen] = useState(false)
   const toggleRef = useRef<HTMLButtonElement>(null)
   const firstItemRef = useRef<HTMLButtonElement>(null)
@@ -40,6 +41,13 @@ export function AppShell({ children, categories, activeCategory, onCategory, onS
     {open && <button type="button" tabIndex={-1} className="sidebar-scrim" aria-label="Close navigation overlay" onClick={closeSidebar} />}
     <aside id="main-sidebar" className={`sidebar ${open ? 'sidebar--open' : ''}`} aria-label="Main navigation">
       <div className="sidebar-brand"><BrandArtwork variant="wordmark" /><button className="sidebar-close" type="button" aria-label="Close navigation" onClick={closeSidebar}><X size={21} /></button><p>Fresh moments, made simple.</p></div>
+      {onAdminNavigate && <nav className="sidebar-admin" aria-label="Admin navigation"><span className="sidebar-label">MENU MANAGEMENT</span>{[
+        { path: '/admin', label: 'Products', Icon: LayoutGrid },
+        { path: '/admin/products/new', label: 'Add product', Icon: Plus },
+      ].map(({ path, label, Icon }, index) => <button ref={index === 0 ? firstItemRef : undefined} type="button" key={path} className={`sidebar-item ${location.pathname === path ? 'active' : ''}`} aria-current={location.pathname === path ? 'page' : undefined} onClick={() => {
+        if (open) closeSidebar()
+        if (location.pathname !== path) onAdminNavigate(path)
+      }}><Icon size={18} aria-hidden="true" />{label}</button>)}</nav>}
       {categories && onCategory && <nav className="sidebar-categories" aria-label="Menu categories"><span className="sidebar-label">BROWSE MENU</span>{categories.map((item, index) => { const Icon = categoryIcon(item); return <button ref={index === 0 ? firstItemRef : undefined} key={item} type="button" className={`sidebar-item ${activeCategory === item ? 'active' : ''}`} aria-pressed={activeCategory === item} onClick={() => { onCategory(item); document.getElementById('menu-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); if (open) closeSidebar() }}><Icon size={18} aria-hidden="true" /> {item}</button> })}</nav>}
       <div className="sidebar-bottom">{onSignOut && <button className="sidebar-item sign-out" type="button" onClick={onSignOut}><LogOut size={19} /> Sign out</button>}<small>VERDE COFFEE · POS</small></div>
     </aside>

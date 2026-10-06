@@ -8,16 +8,28 @@ import { imageUrl } from '../../server/supabase.js'
 
 export const config = { api: { bodyParser: false } }
 
-async function readImage(req: VercelRequest): Promise<Uint8Array> {
-  const chunks: Buffer[] = []
-  let size = 0
-  for await (const chunk of req) {
-    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
-    size += buffer.length
-    if (size > MAX_WEBP_BYTES) throw new HttpError(413, 'WebP images must be at most 1 MiB.')
-    chunks.push(buffer)
-  }
-  return Buffer.concat(chunks)
+function readImage(req: VercelRequest): Promise<Uint8Array> {
+  // Vercel's Node helpers restore a consumed body through data/end listeners.
+  // IncomingMessage's async iterator can still see the original, ended stream.
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = []
+    let size = 0, finished = false
+    const fail = (error: Error) => { if (!finished) { finished = true; chunks.length = 0; reject(error) } }
+    req.on('data', (chunk: Buffer | string) => {
+      if (finished) return
+      const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
+      size += buffer.length
+      if (size > MAX_WEBP_BYTES) { fail(new HttpError(413, 'WebP images must be at most 1 MiB.')); return }
+      chunks.push(buffer)
+    })
+    req.on('end', () => {
+      if (finished) return
+      if (!size) { fail(new HttpError(400, 'No image data was received. Select the image again and retry.')); return }
+      finished = true; resolve(Buffer.concat(chunks)); chunks.length = 0
+    })
+    req.on('error', fail)
+    req.on('aborted', () => fail(new HttpError(400, 'Image upload was interrupted. Select the image again and retry.')))
+  })
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

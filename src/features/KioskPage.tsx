@@ -8,6 +8,7 @@ import { AppShell } from '../components/AppShell'
 import { BrandArtwork } from '../components/BrandArtwork'
 import { ProductThumbnail } from '../components/ProductThumbnail'
 import { ReceiptPaper } from '../components/ReceiptPaper'
+import { CustomerFeedback } from '../components/CustomerFeedback'
 import { WelcomePage } from '../components/WelcomePage'
 import { ActionDialog, Toast, useToast } from '../components/Feedback'
 import type { DialogState } from '../components/Feedback'
@@ -24,6 +25,7 @@ export function KioskPage() {
   const [method, setMethod] = useState<PaymentMethod | null>(null)
   const [cash, setCash] = useState('')
   const [receipt, setReceipt] = useState<Receipt | null>(null)
+  const [feedbackKey, setFeedbackKey] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(true)
   const [catalogError, setCatalogError] = useState<string | null>(null)
@@ -109,7 +111,9 @@ export function KioskPage() {
     setBusy(true)
     if (method === 'card') await new Promise(resolve => setTimeout(resolve, 900))
     try {
-      const result = await api.checkout({ idempotencyKey: keyRef.current, items: lines.map(line => ({ product_id: line.product.id, quantity: line.quantity })), paymentMethod: method, orderType, expectedTotalCentavos: total, ...(method === 'cash' ? { paidCentavos: paid } : {}) })
+      const checkoutKey = keyRef.current
+      const result = await api.checkout({ idempotencyKey: checkoutKey, items: lines.map(line => ({ product_id: line.product.id, quantity: line.quantity })), paymentMethod: method, orderType, expectedTotalCentavos: total, ...(method === 'cash' ? { paidCentavos: paid } : {}) })
+      setFeedbackKey(checkoutKey)
       setReceipt(result.receipt); setStep('success'); clearToast()
       setDialog({ kind: 'success', title: 'Payment successful', message: `${formatPeso(result.receipt.total_centavos)} paid by ${methodNames[result.receipt.payment_method]}. Reference ${result.receipt.reference}.`, primaryLabel: 'View receipt', onPrimary: () => { setDialog(null); setStep('receipt') }, secondaryLabel: 'View success screen', onSecondary: () => setDialog(null) })
     } catch (error) {
@@ -117,7 +121,7 @@ export function KioskPage() {
     } finally { setBusy(false) }
   }
   function newTransaction() {
-    setCart({}); setReceipt(null); setMethod(null); setCash(''); setCategory('All'); setStep('order'); setOrderType(null); resetKey(); clearToast()
+    setCart({}); setReceipt(null); setFeedbackKey(null); setMethod(null); setCash(''); setCategory('All'); setStep('order'); setOrderType(null); resetKey(); clearToast()
     setDialog(null); loadProducts(true)
   }
   function changeOrderType() {
@@ -156,7 +160,7 @@ export function KioskPage() {
 
       {step === 'success' && receipt && <div className="flow-card success-card"><div className="success-mark"><Check size={38} /></div><p className="eyebrow">ORDER COMPLETE</p><h1>Payment successful!</h1><p className="muted">Thank you for spending a moment with Verde Coffee.</p><div className="success-amount">{formatPeso(receipt.total_centavos)}</div><dl className="details"><div><dt>Reference</dt><dd className="reference">{receipt.reference}</dd></div><div><dt>Order type</dt><dd>{receipt.order_type ? orderTypeNames[receipt.order_type] : '—'}</dd></div><div><dt>Payment method</dt><dd>{methodNames[receipt.payment_method]}</dd></div><div><dt>Amount paid</dt><dd>{formatPeso(receipt.paid_centavos)}</dd></div><div><dt>Change</dt><dd>{formatPeso(receipt.change_centavos)}</dd></div></dl><div className="receipt-actions"><button className="primary full" onClick={() => setStep('receipt')}><ReceiptText size={20} /> View receipt</button><button className="secondary full" onClick={() => window.print()}><Printer size={20} /> Print Receipt</button></div></div>}
 
-      {step === 'receipt' && receipt && <div className="flow-card receipt-card"><h1>Your digital receipt</h1><p className="muted">Keep this reference for your records.</p><ReceiptPaper receipt={receipt} /><div className="receipt-actions"><button className="secondary full" onClick={() => window.print()}><Printer size={20} /> Print Receipt</button><button className="primary full" onClick={newTransaction}><ShoppingBag size={20} /> New transaction</button></div></div>}
+      {step === 'receipt' && receipt && <div className="flow-card receipt-card"><h1>Your digital receipt</h1><p className="muted">Keep this reference for your records.</p><ReceiptPaper receipt={receipt} />{feedbackKey && <CustomerFeedback key={receipt.reference} checkoutKey={feedbackKey} />}<div className="receipt-actions"><button className="secondary full" onClick={() => window.print()}><Printer size={20} /> Print Receipt</button><button className="primary full" onClick={newTransaction}><ShoppingBag size={20} /> New transaction</button></div></div>}
     </main><footer className="site-footer">Fresh moments, made simple. <span>Verde Coffee · Self-service kiosk</span></footer>
     {receipt && <div className="print-only"><ReceiptPaper receipt={receipt} /></div>}
   </AppShell>

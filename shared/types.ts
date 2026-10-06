@@ -15,6 +15,16 @@ export interface Product {
 
 export interface CartItem { product_id: string; quantity: number }
 
+export interface OrderFeedback {
+  id: string
+  rating: number
+  comment: string | null
+  order_reference: string
+  created_at: string
+}
+
+export interface FeedbackPage { feedback: OrderFeedback[]; hasMore: boolean }
+
 export interface ReceiptItem {
   product_id: string
   product_name: string
