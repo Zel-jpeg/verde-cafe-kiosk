@@ -25,21 +25,53 @@ export function KioskPage() {
   const [cash, setCash] = useState('')
   const [receipt, setReceipt] = useState<Receipt | null>(null)
   const [busy, setBusy] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [catalogError, setCatalogError] = useState<string | null>(null)
   const [dialog, setDialog] = useState<DialogState | null>(null)
   const { toast, showToast, clearToast } = useToast()
   const keyRef = useRef(crypto.randomUUID())
+  const mountedRef = useRef(false)
+  const catalogRequestRef = useRef<Promise<void> | null>(null)
+  const catalogVersionRef = useRef(0)
 
-  const loadProducts = useCallback(async () => {
-    try {
-      const data = await api.products()
+  const loadProducts = useCallback((refresh = false) => {
+    if (!mountedRef.current) return
+    if (refresh) catalogVersionRef.current += 1
+    setLoading(true)
+    setCatalogError(null)
+    // Keep the request through StrictMode's effect replay. Refreshes wait for it
+    // to settle, and its version prevents an older result from being published.
+    if (catalogRequestRef.current) return
+    const version = catalogVersionRef.current
+    catalogRequestRef.current = api.products().then(data => {
+      if (!mountedRef.current || version !== catalogVersionRef.current) return
       if (!Array.isArray(data.products)) throw new Error('The catalog response was invalid.')
       setProducts(data.products)
-    } catch (error) {
-      setDialog({ kind: 'error', title: 'Menu unavailable', message: (error as Error).message, primaryLabel: 'Try again', onPrimary: () => { setDialog(null); void loadProducts() } })
-    } finally { setLoading(false) }
+      const photos = new Set(data.products.map(product => productPhoto(product)?.path).filter((path): path is string => Boolean(path)))
+      for (const path of photos) {
+        // Image warming is best effort and never gates catalog readiness.
+        try { const image = new Image(); image.src = path } catch { /* Use the card's normal image loading. */ }
+      }
+    }).catch((error: unknown) => {
+      if (!mountedRef.current || version !== catalogVersionRef.current) return
+      setCatalogError(error instanceof Error ? error.message : 'The menu could not be loaded. Please try again.')
+    }).finally(() => {
+      catalogRequestRef.current = null
+      if (!mountedRef.current) return
+      if (version !== catalogVersionRef.current) { loadProducts(); return }
+      setLoading(false)
+    })
   }, [])
-  useEffect(() => { if (orderType) { setLoading(true); void loadProducts() } }, [loadProducts, orderType])
+  useEffect(() => {
+    mountedRef.current = true
+    loadProducts()
+    return () => { mountedRef.current = false }
+  }, [loadProducts])
+  useEffect(() => {
+    if (orderType && catalogError) {
+      setDialog({ kind: 'error', title: 'Menu unavailable', message: catalogError, primaryLabel: 'Try again', onPrimary: () => { setDialog(null); loadProducts() } })
+    }
+  }, [catalogError, loadProducts, orderType])
 
   const lines = useMemo(() => products.filter(product => cart[product.id] > 0).map(product => ({ product, quantity: cart[product.id], subtotal: product.price_centavos * cart[product.id] })), [products, cart])
   const count = lines.reduce((sum, line) => sum + line.quantity, 0)
@@ -86,10 +118,12 @@ export function KioskPage() {
   }
   function newTransaction() {
     setCart({}); setReceipt(null); setMethod(null); setCash(''); setCategory('All'); setStep('order'); setOrderType(null); resetKey(); clearToast()
+    setDialog(null); loadProducts(true)
   }
   function changeOrderType() {
     if (busy || receipt) return
     setMethod(null); setCash(''); setStep('order'); setOrderType(null); resetKey(); clearToast()
+    setDialog(null)
   }
 
   const stepNumber = step === 'order' ? 1 : step === 'review' ? 2 : step === 'method' || step === 'pay' ? 3 : 4
@@ -105,7 +139,7 @@ export function KioskPage() {
           <div className="hero"><div><p className="eyebrow">WELCOME TO VERDE COFFEE · {orderTypeNames[orderType].toUpperCase()}</p><h1>A little green in<br />your everyday.</h1><p>Pick your favorites. We’ll take care of the rest.</p></div><BrandArtwork variant="mascot" /></div>
           <div className="section-heading"><div><p className="eyebrow">MADE FOR YOUR MOMENT</p><h2>Explore our menu</h2></div><span>{products.length} delicious choices</span></div>
           <div className="category-summary"><CategoryMark size={17} aria-hidden="true" /><span>{category === 'All' ? 'All favorites' : category}</span><span>Choose a category in the sidebar</span></div>
-          {loading ? <p className="empty-state">Loading today’s menu…</p> : visible.length === 0 ? <p className="empty-state">No products in this category yet.</p> : <div className="product-grid" id="menu-products">{visible.map(product =>
+          {loading ? <p className="empty-state">Loading today’s menu…</p> : catalogError ? <p className="empty-state">Menu unavailable. Please try again.</p> : visible.length === 0 ? <p className="empty-state">No products in this category yet.</p> : <div className="product-grid" id="menu-products">{visible.map(product =>
             <button type="button" className="product-card" key={product.id} aria-label={`Add ${product.name} for ${formatPeso(product.price_centavos)}`} disabled={product.stock_quantity === 0} onClick={() => changeQuantity(product, 1)}>
               <div className={`product-visual tone-${(product.category || 'Other').toLowerCase().replace(/\W/g, '')}`}>{(() => { const photo = productPhoto(product); const Icon = categoryIcon(product.category); return photo ? <img src={photo.path} alt={photo.alt} loading="lazy" /> : <Icon size={70} aria-hidden="true" strokeWidth={1.5} /> })()}{product.stock_quantity === 0 && <span className="sold-out">Sold out</span>}</div>
               <div className="product-info"><span className="product-category">{product.category || 'Coffee favorite'}</span><h3>{product.name}</h3><p>{product.description || 'Made fresh for you.'}</p><div className="product-bottom"><strong>{formatPeso(product.price_centavos)}</strong><span className="add-symbol"><Plus size={20} /></span></div></div>
