@@ -1,6 +1,6 @@
 # Development Process and GitHub Evidence
 
-The local `IT415-Acceptance-Checklist.docx.pdf` evaluates the actual group workflow as well as the running kiosk (pp. 2-4). Fill this register with verifiable facts. A template row is **not evidence**. Do not invent members, commit SHAs, pull requests, reviews, or development stages.
+The local `pdf/IT415-Acceptance-Checklist.docx.pdf` evaluates the actual group workflow as well as the running kiosk (pp. 2-4). Fill this register with verifiable facts. A template row is **not evidence**. Do not invent members, commit SHAs, pull requests, reviews, or development stages.
 
 ## Shared repository register
 

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-label="Verde Café logo">
+  <title>Verde Café</title>
+  <desc>A V-shaped coffee cup with a leaf and a curl of steam beside the Verde Café wordmark.</desc>
+  <g fill="none" stroke="#173F35" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 86 105 L 228 325 L 366 105" stroke-width="38"/>
+    <path d="M 354 98 C 372 60 412 49 439 58 C 435 95 410 119 374 119 C 365 119 358 112 354 98 Z" fill="#173F35" stroke="none"/>
+  </g>
+  
+  <path d="M 226 105 C 205 130 244 144 223 172 C 211 188 211 203 223 216" fill="none" stroke="#173F35" stroke-width="11" stroke-linecap="round"/>
+  <text x="490" y="239" fill="#173F35" font-family="Georgia, 'Times New Roman', serif" font-size="150" font-weight="700" letter-spacing="-6">Verde</text>
+  <path d="M 496 271 H 1012" stroke="#173F35" stroke-width="4"/>
+  <text x="497" y="340" fill="#173F35" font-family="'Segoe UI', Arial, sans-serif" font-size="52" font-weight="700" letter-spacing="19">CAFÉ</text>
+</svg>

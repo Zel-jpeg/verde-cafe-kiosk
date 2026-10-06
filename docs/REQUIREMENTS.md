@@ -1,6 +1,6 @@
 # IT415 POS Kiosk Requirements
 
-This is a working specification derived from the local `IT415_Practical_Exam.pdf` and `IT415-Acceptance-Checklist.docx.pdf`. If these notes conflict with either PDF, use the PDFs. The local `IT415-Sample-UI.pdf` provides examples, not a mandatory visual design. These PDFs are intentionally excluded from the GitHub upload.
+This is a working specification derived from the local `pdf/IT415_Practical_Exam.pdf` and `pdf/IT415-Acceptance-Checklist.docx.pdf`. If these notes conflict with either PDF, use the PDFs. The local `pdf/IT415-Sample-UI.pdf` provides examples, not a mandatory visual design. These PDFs are not needed for the application build.
 
 ## Scope and transaction flow
 
@@ -42,6 +42,20 @@ Screens may be combined when this sequence and all behavior remain clear. See ex
 
 The acceptance checklist splits some of these into separate Pass/Fail rows. [ACCEPTANCE_TESTS.md](ACCEPTANCE_TESTS.md) preserves all 26 application checks individually.
 
+## Group-selected customer and admin requirements
+
+The exam treats product management, images, inventory, and login as optional enhancements. The group has now selected them as part of **this project's implementation scope**. They add to, rather than replace, FR-01 through FR-19. [ADMIN_AND_MEDIA.md](ADMIN_AND_MEDIA.md) gives the detailed behavior and security rules.
+
+| ID | Project requirement |
+| --- | --- |
+| FR-20 | Provide two user experiences: a public Customer kiosk that requires no login, and a protected Admin panel. |
+| FR-21 | Admins sign in through Supabase Auth. Every admin API operation verifies the signed-in user and an admin role on the server; hiding the panel in React is not authorization. |
+| FR-22 | The Admin panel can add, edit, and archive products and set each product's name, price, stock quantity, active status, and image. Preserve historical receipt data when a product changes. |
+| FR-23 | Customer selection cannot exceed available stock. A successful checkout decreases stock exactly once; rejected or incomplete payments do not. Concurrent checkouts must not oversell the last unit. |
+| FR-24 | Admin image input accepts PNG or JPEG. Before upload, resize/encode it to WebP; reject conversion failure, unsupported input, or an output above the configured limit with clear feedback. |
+| FR-25 | Save WebP image files in a Supabase Storage `product-images` bucket. Store only the image's object path and related metadata in Postgres, not the image bytes. Public customer screens can display product images; only authorized admins can upload/replace them. |
+| FR-26 | Changes to products, prices, stock, active status, and images appear in the customer catalog after refresh/reload. Out-of-stock or archived products cannot be purchased. |
+
 ## Product data and example arithmetic
 
 At least six products are required. The following products and prices are **examples only**; other choices are allowed (exam p. 2).
@@ -62,7 +76,8 @@ The exam's sample order is Coffee × 2 = ₱90.00, Sandwich × 1 = ₱50.00, and
 - A product's cart quantity is a whole number greater than zero; removing the item makes it absent from the cart. A decrease control may remove a one-quantity item or stop at one, provided removal is possible and no negative value appears.
 - Do not allow payment completion for an empty order. This guard supports a coherent flow, although the PDF does not prescribe its exact message or control state.
 - Calculate money reliably, preferably using integer centavos or a decimal type instead of binary floating-point arithmetic.
-- A failed or incomplete payment must not create a completed transaction, receipt, or optional inventory deduction.
+- A failed or incomplete payment must not create a completed transaction, receipt, or inventory deduction.
+- The checkout API must reload current prices and stock from Supabase; browser-submitted prices or totals are never authoritative. Validate and save the transaction, its item snapshots, and stock changes atomically.
 - Keep the confirmed order unchanged during payment and on the receipt. If edits are allowed after reaching payment, return to review and refresh the amount due before completing payment.
 - Generate the transaction reference when completion succeeds, not for a rejected attempt. A timestamp, sequence, or random reference is allowed if completed transactions remain distinct.
 - Reset all customer-specific cart, payment, success, and receipt state for the next transaction.
@@ -75,5 +90,5 @@ The local sample UI PDF shows: product grid and cart (p. 1), order review (p. 2)
 
 The exam allows web, desktop, PWA, mobile, or local kiosk applications and any suitable language, framework, UI library, architecture, and AI development tool (exam p. 1). Product data may be hard-coded, stored in JSON/local storage, or kept in a database; a database is **not mandatory** unless separately required by the instructor (exam p. 6). Explain the chosen approach in the final README.
 
-Optional additions include categories, images, search, inventory, transaction history, printing, discounts, login, reports, themes, full-screen mode, product management, persistence, and a real QR generator. None substitutes for required behavior. If inventory is implemented, block selection beyond stock and do not deduct stock for rejected payment (exam pp. 2, 6-7). Physical printing and real payment gateway integration are optional (exam pp. 3-4).
+The exam lists categories, images, search, inventory, transaction history, printing, discounts, login, reports, themes, full-screen mode, product management, persistence, and a real QR generator as optional examples. This group has selected images, inventory, admin login, product management, and Supabase persistence, as specified above. Other enhancements remain optional and must not replace the core kiosk behavior. Physical printing and real payment gateway integration remain optional (exam pp. 3-4); the project uses simulated QR and Card payments.
 

@@ -1,6 +1,6 @@
 # AI-Assisted Development Log
 
-The local `IT415-Acceptance-Checklist.docx.pdf`, p. 4, asks for actual AI prompts, responses, evaluations, and modifications, with member-level evidence of generation, debugging, and refactoring when used. This file is a record template. Add entries for real work only; do not reconstruct fictitious prompts or claim that an AI response was accepted unchanged if it was edited.
+The local `pdf/IT415-Acceptance-Checklist.docx.pdf`, p. 4, asks for actual AI prompts, responses, evaluations, and modifications, with member-level evidence of generation, debugging, and refactoring when used. This file is a record template. Add entries for real work only; do not reconstruct fictitious prompts or claim that an AI response was accepted unchanged if it was edited.
 
 ## How to record an entry
 
