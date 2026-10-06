@@ -126,7 +126,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .step small{font:700 12px/1.25 'DM Sans',Arial,sans-serif}
 .step.current small,.step.done small{color:var(--forest)}
 .product-visual,.tone-coffee,.tone-signature,.tone-refreshers,.tone-food,.tone-pastries{background:#fff}
-.product-visual img{object-fit:contain;padding:4px}
+/* Keep intrinsic image dimensions from enlarging the grid track and clipping the photo. */
+.product-visual img{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain;object-position:center;padding:12px}
 .product-info h3{color:var(--espresso);font-weight:800;line-height:1.25}
 .product-info p{color:#5e574e;font-size:13px;line-height:1.45}
 .product-category{color:#385f32;font-size:11px}
